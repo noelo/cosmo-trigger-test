@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.noc</groupId>
+    <artifactId>dbwatcherfn</artifactId>
+    <version>1.0-SNAPSHOT</version>
+
+    <name>Azure Java Functions</name>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>11</maven.compiler.source>
+        <azure.functions.maven.plugin.version>1.18.0</azure.functions.maven.plugin.version>
+        <azure.functions.java.library.version>2.0.0</azure.functions.java.library.version>
+        <functionAppName>dbwatcherfn-20220605080058173</functionAppName>
+        <functionAppRegion>uksouth</functionAppRegion>
+        <quarkus-plugin.version>2.9.2.Final</quarkus-plugin.version>
+        <quarkus.platform.artifact-id>quarkus-bom</quarkus.platform.artifact-id>
+        <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
+        <quarkus.platform.version>2.9.2.Final</quarkus.platform.version>
+        <quarkus.package.type>uber-jar</quarkus.package.type>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>${quarkus.platform.group-id}</groupId>
+                <artifactId>${quarkus.platform.artifact-id}</artifactId>
+                <version>${quarkus.platform.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.microsoft.azure.functions</groupId>
+            <artifactId>azure-functions-java-library</artifactId>
+            <version>${azure.functions.java.library.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-reactive-routes</artifactId>
+          </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>io.quarkus</groupId>
+                <artifactId>quarkus-maven-plugin</artifactId>
+                <version>${quarkus-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>build</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>com.coderplus.maven.plugins</groupId>
+                <artifactId>copy-rename-maven-plugin</artifactId>
+                <version>1.0.1</version>
+                <executions>
+                  <execution>
+                    <id>rename-runner</id>
+                    <phase>package</phase>
+                    <goals>
+                      <goal>rename</goal>
+                    </goals>
+                    <configuration>
+                      <sourceFile>${project.build.directory}/${project.artifactId}-${project.version}-runner.jar</sourceFile>
+                      <destinationFile>${project.build.directory}/${project.artifactId}-${project.version}.jar</destinationFile>
+                    </configuration>
+                  </execution>
+                </executions>
+              </plugin>
+            <plugin>
+                <groupId>com.microsoft.azure</groupId>
+                <artifactId>azure-functions-maven-plugin</artifactId>
+                <version>${azure.functions.maven.plugin.version}</version>
+                <configuration>
+                    <!-- function app name -->
+                    <appName>${functionAppName}</appName>
+                    <!-- function app resource group -->
+                    <resourceGroup>java-functions-group</resourceGroup>
+                    <!-- function app service plan name -->
+                    <appServicePlanName>java-functions-app-service-plan</appServicePlanName>
+                    <!-- function app region-->
+                    <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details#supported-regions for all valid values -->
+                    <region>${functionAppRegion}</region>
+                    <!-- function pricingTier, default to be consumption if not specified -->
+                    <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details#supported-pricing-tiers for all valid values -->
+                    <!-- <pricingTier></pricingTier> -->
+                    <!-- Whether to disable application insights, default is false -->
+                    <!-- refers https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details for all valid configurations for application insights-->
+                    <!-- <disableAppInsights></disableAppInsights> -->
+                    <runtime>
+                        <!-- runtime os, could be windows, linux or docker-->
+                        <os>linux</os>
+                        <javaVersion>11</javaVersion>
+                    </runtime>
+                    <appSettings>
+                        <property>
+                            <name>FUNCTIONS_EXTENSION_VERSION</name>
+                            <value>~4</value>
+                        </property>
+                    </appSettings>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>package-functions</id>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--Remove obj folder generated by .NET SDK in maven clean-->
+            <plugin>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.1.0</version>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>obj</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>
